@@ -10,6 +10,6 @@
  * 
  * A implementação/definição real está no arquivo Cores.cpp
  */
-extern float cores[9][3];
+extern float cores[10][3];
 
 #endif               // Fim do bloco condicional
