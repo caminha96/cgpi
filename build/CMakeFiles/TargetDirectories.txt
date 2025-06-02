@@ -1,3 +1,0 @@
-/home/gilton/CLionProjects/CGPI/build/CMakeFiles/CGPI.dir
-/home/gilton/CLionProjects/CGPI/build/CMakeFiles/edit_cache.dir
-/home/gilton/CLionProjects/CGPI/build/CMakeFiles/rebuild_cache.dir
