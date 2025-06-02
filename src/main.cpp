@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);  // Double buffering + cores RGB
     glutInitWindowSize(800, 800);                 // Tamanho da janela 800x800
-    glutCreateWindow("Space Invaders - OpenGL");  // Cria a janela
+    glutCreateWindow("Farofa");  // Cria a janela
 
     // Configuração do OpenGL
     glClearColor(0, 0, 0, 1);                    // Cor de fundo preta
