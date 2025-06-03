@@ -45,7 +45,7 @@ void Game::moveNaveDireita() {
     }
 }
 void Game::naveShoot() {
-    if (!naves.empty()) {
+    if (!naves.empty() && !naves[0].isHitAnimating) { // Opcional: impedir tiro durante a animação
         const float velocidadeTiro = 0.05f;
         shoots.emplace_back(naves[0].x, naves[0].y + 0.1f, velocidadeTiro, +1);
     }
@@ -95,22 +95,30 @@ bool Game::colidiu(const Shoot& tiro, const Nave& nave) {
            (tiro.y >= nave.y - alturaNave/2 && tiro.y <= nave.y + alturaNave/2);
 }
 void Game::checarColisoes() {
-    bool bossFoiDestruido = false;  // Nova flag
+    bool bossFoiDestruido = false;
 
     for (auto& tiro : shoots) {
-        if (tiro.direction == -1) {
+        if (tiro.direction == -1) { // Tiro do alien/boss em direção à nave
             if (!naves.empty() && colidiu(tiro, naves[0])) {
                 tiro.active = false;
-                vidas--;
-                if (vidas <= 0) {
-                    estadoJogo = GAME_OVER;
-                } else {
-                    respawnNave();
+
+                if (!naves[0].isHitAnimating) { // Só perde vida e respawna se não estiver já na animação de hit (evita hits múltiplos no mesmo "dano")
+                                                // Ou remova essa condição se quiser que cada hit conte independentemente
+                    naves[0].startHitAnimation(); // <<-- INICIA A ANIMAÇÃO DE ROTAÇÃO AQUI
+                    vidas--;
+                    if (vidas <= 0) {
+                        estadoJogo = GAME_OVER;
+                    } else {
+                        // A nave será reposicionada, e a animação de rotação continuará lá.
+                        // Se quiser um delay antes do respawn, a lógica seria mais complexa.
+                        respawnNave();
+                    }
                 }
                 break;
             }
         }
-        if (tiro.direction == +1) {
+        // ... (resto da lógica de colisão com aliens e boss) ...
+        if (tiro.direction == +1) { // Tiro da nave
             for (auto& alien : aliens) {
                 if (fabs(tiro.x - alien.x) < 0.09f && fabs(tiro.y - alien.y) < 0.09f) {
                     tiro.active = false;
@@ -125,27 +133,25 @@ void Game::checarColisoes() {
                     break;
                 }
             }
-// Pelo código completo corrigido:
-        if (alienBoss != nullptr && alienBoss->isAlive()) {
-        float bossWidth = 15 * 0.03f;
-        float bossHeight = 18 * 0.03f;
-    
-            if (tiro.x >= alienBoss->x - bossWidth/2 && 
-            tiro.x <= alienBoss->x + bossWidth/2 &&
-            tiro.y <= alienBoss->y + bossHeight/2 && 
-            tiro.y >= alienBoss->y - bossHeight/2) {
-        
-            tiro.active = false;
-            alienBoss->takeDamage();
-        
-                if (!alienBoss->isAlive()) {
-                delete alienBoss;
-                alienBoss = nullptr;
-                bossFoiDestruido = true;
-                // Adicione aqui qualquer efeito de vitória
+            // Colisão com o Boss
+            if (alienBoss != nullptr && alienBoss->isAlive()) {
+                float bossWidth = 15 * 0.03f; // Essas dimensões devem ser consistentes
+                float bossHeight = 18 * 0.03f;
+                if (tiro.x >= alienBoss->x - bossWidth/2 &&
+                    tiro.x <= alienBoss->x + bossWidth/2 &&
+                    tiro.y <= alienBoss->y + bossHeight/2 &&
+                    tiro.y >= alienBoss->y - bossHeight/2) {
+
+                    tiro.active = false;
+                    alienBoss->takeDamage();
+
+                    if (!alienBoss->isAlive()) {
+                        delete alienBoss;
+                        alienBoss = nullptr;
+                        bossFoiDestruido = true;
+                    }
                 }
             }
-        }
         }
     }
 
@@ -161,21 +167,33 @@ void Game::checarColisoes() {
 }
 void Game::update() {
     if (estadoJogo == GAME_OVER || estadoJogo == VITORIA) return;
-    if (nivel == 2 && aliens.empty() && alienBoss == nullptr) {
-    estadoJogo = VITORIA;  // Você precisará adicionar este estado
+
+    if (nivel == 2 && aliens.empty() && alienBoss == nullptr /*&& !bossFoiDestruido - essa condição estava em checarColisoes*/) {
+        // Checar se o boss foi destruído antes de declarar vitória se ele existiu neste nível.
+        // Se o boss nunca apareceu (ex: aliens eliminados antes do boss spawnar), então é vitória.
+        // A lógica exata aqui pode depender de como 'bossFoiDestruido' é gerenciado entre updates.
+        // Para simplificar, vamos assumir que se não há aliens e não há boss (ou já foi destruído), é vitória.
+        estadoJogo = VITORIA;
+        return; // Adicionado return para não continuar o update no estado de VITORIA
     }
+
+    // Atualiza a animação da nave (se houver alguma)
+    if (!naves.empty()) {
+        naves[0].updateHitAnimation(); // <<-- ATUALIZA A ANIMAÇÃO DA NAVE AQUI
+    }
+
     bool changeDirection = false;
     for (auto& alien : aliens) {
         alien.move(direction, 0);
-
         if (alien.x > 0.9f || alien.x < -0.9f) {
             changeDirection = true;
         }
-
         if (alien.y < -0.8f) {
             estadoJogo = GAME_OVER;
+            return; // Adicionado return para não continuar o update no estado de GAME_OVER
         }
     }
+    // ... (resto da sua função Game::update()) ...
     if (changeDirection) {
         direction = -direction;
         for (auto& alien : aliens) {
@@ -184,7 +202,9 @@ void Game::update() {
     }
     int chanceTiro = (nivel == 1) ? 5 : 15;
     if (!aliens.empty() && (rand() % 1000) < chanceTiro) {
-        alienShoot(rand() % aliens.size());
+        if (!aliens.empty()) { // Checagem extra para evitar acesso fora dos limites se aliens ficou vazio entre a checagem e o uso
+             alienShoot(rand() % aliens.size());
+        }
     }
     if (nivel == 2) {
         static float zigzagOffset = 0.01f;
@@ -194,21 +214,25 @@ void Game::update() {
         }
         esquerda = !esquerda;
     }
-    checarColisoes();
-    updateShoots();
+
+    updateShoots(); // Mover updateShoots antes de checarColisoes para que os tiros se movam antes da checagem
+    checarColisoes(); // checarColisoes pode mudar estadoJogo para GAME_OVER ou VITORIA
+
+    if (estadoJogo == GAME_OVER || estadoJogo == VITORIA) return; // Checar novamente após colisões
+
     if (alienBoss && alienBoss->life > 0) {
-        static float bossTime = 0.0f;
-        bossTime += 0.03f;
+        static float bossTime = 0.0f; // Considere mover timers como este para membros da classe Game se persistirem entre diferentes bosses ou resets
+        bossTime += 0.016f; // Supondo aproximadamente 60FPS, para uma velocidade mais consistente
         alienBoss->x = 0.7f * sin(bossTime);
-        alienBoss->y = 1.0f + 0.2f * sin(bossTime * 0.5f);
-    }
-    if (alienBoss && alienBoss->life > 0) {
-        int chanceTiro = 40; // Ajuste conforme dificuldade
-        if ((rand() % 1000) < chanceTiro) {
+        // A posição Y do Boss estava sendo atualizada para 1.0f + ..., o que o colocaria fora da tela para cima.
+        // Ajustando para mantê-lo visível, por exemplo:
+        alienBoss->y = 0.7f + 0.1f * sin(bossTime * 0.5f); // Ajustado para uma posição Y mais razoável
+
+        int chanceTiroBoss = 40;
+        if ((rand() % 1000) < chanceTiroBoss) {
             bossShoot();
         }
     }
-
 }
 void Game::drawBossHealthBar() const {
     if (alienBoss == nullptr || !alienBoss->isAlive()) return;

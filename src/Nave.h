@@ -1,47 +1,26 @@
-#pragma once  
+#ifndef NAVE_H
+#define NAVE_H
 
-/**
- * Nave
-   Classe que controla a espaçonave do jogador
- * 
- * Gerencia posição, movimento e renderização da nave do jogador.
- * A nave é representada por uma matriz de pixels e pode se mover horizontalmente.
- */
+// #include <GL/glut.h> // Se não estiver já incluído por outros headers que Nave.h possa incluir indiretamente
+
 class Nave {
 public:
-    float x, y;          ///< Posição atual da nave no espaço 2D (coordenadas centrais)
-    int matriz[30][30]{}; ///< Matriz que define o formato pixelado da nave (valores correspondem a cores)
+    float x, y;
+    bool isHitAnimating;      // Indica se a animação de "atingido" está ativa
+    float hitRotationAngle;   // Ângulo atual da rotação de "atingido"
+    float hitAnimationTimer;  // Timer para controlar a duração da animação
 
-    /**
-     * Construtor da nave
-     * startX: Posição inicial no eixo X
-     * startY: Posição inicial no eixo Y
-     * 
-     * Inicializa a nave nas coordenadas especificadas e prepara a matriz de desenho.
-     */
+    // Constantes para a animação
+    static const float HIT_ANIMATION_DURATION; // Duração em número de "updates" ou "frames"
+    static const float HIT_ROTATION_SPEED;     // Velocidade da rotação em graus por update/frame
+
     Nave(float startX, float startY);
-
-    /*
-     * Renderiza a nave na tela
-     * 
-     * Desenha a nave usando a matriz de pixels, convertendo os valores em quadrados coloridos.
-     * O desenho é feito com base na posição atual (x,y) da nave.
-     */
     void desenha() const;
-
-    /*
-     * Move a nave para a esquerda
-     * 
-     * Atualiza a posição X da nave, garantindo que não saia dos limites da tela.
-     * A velocidade de movimento é fixa (deve ser definida na implementação).
-     */
     void moverEsquerda();
-
-    /*
-     * Move a nave para a direita
-     * 
-     * Atualiza a posição X da nave, garantindo que não saia dos limites da tela.
-     * A velocidade de movimento é fixa (deve ser definida na implementação).
-     */
     void moverDireita();
+
+    void startHitAnimation();  // Para iniciar a animação de "hit"
+    void updateHitAnimation(); // Para atualizar a animação a cada frame
 };
+
+#endif // NAVE_H
