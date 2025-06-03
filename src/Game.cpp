@@ -210,10 +210,59 @@ void Game::update() {
     }
 
 }
+void Game::drawBossHealthBar() const {
+    if (alienBoss == nullptr || !alienBoss->isAlive()) return;
+
+    const float maxHealth = 33.0f; // Vida máxima do boss
+    float currentHealth = static_cast<float>(alienBoss->life);
+    float healthPercentage = currentHealth / maxHealth;
+
+    // Posição e tamanho da barra de vida
+    float barWidth = 0.4f;  // Largura total da barra
+    float barHeight = 0.02f; // Altura da barra
+    float barX = -0.2f;     // Posição X (centralizada)
+    float barY = 0.9f;      // Posição Y (topo da tela)
+
+    // Desenha o fundo da barra (vazia)
+    glColor3f(0.5f, 0.5f, 0.5f); // Cinza
+    glBegin(GL_QUADS);
+        glVertex2f(barX, barY);
+        glVertex2f(barX + barWidth, barY);
+        glVertex2f(barX + barWidth, barY - barHeight);
+        glVertex2f(barX, barY - barHeight);
+    glEnd();
+
+    // Desenha a parte cheia (vida atual)
+    if (healthPercentage > 0) {
+        // Cor muda de verde para vermelho conforme a vida diminui
+        float r = 1.0f - healthPercentage;
+        float g = healthPercentage;
+        float b = 0.0f;
+        glColor3f(r, g, b);
+        
+        glBegin(GL_QUADS);
+            glVertex2f(barX, barY);
+            glVertex2f(barX + barWidth * healthPercentage, barY);
+            glVertex2f(barX + barWidth * healthPercentage, barY - barHeight);
+            glVertex2f(barX, barY - barHeight);
+        glEnd();
+    }
+
+    // Bordas para melhor visualização
+    glColor3f(1.0f, 1.0f, 1.0f); // Branco
+    glLineWidth(1.0f);
+    glBegin(GL_LINE_LOOP);
+        glVertex2f(barX, barY);
+        glVertex2f(barX + barWidth, barY);
+        glVertex2f(barX + barWidth, barY - barHeight);
+        glVertex2f(barX, barY - barHeight);
+    glEnd();
+}
 void Game::draw() {
     static float bossX = 0.0f;
     static float bossSpeed = 0.01f;
     static float bossAngle = 0.0f;
+    drawBossHealthBar();
     if (estadoJogo == GAME_OVER) {
         glColor3f(1.0f, 0.0f, 0.0f);
         glRasterPos2f(-0.15f, 0.0f);

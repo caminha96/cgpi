@@ -67,6 +67,8 @@ public:
     void restart();          ///< Reinicia o jogo completamente
     void checarColisoes();   ///< Verifica todas as colisões
 
+    void drawBossHealthBar() const;
+
     void bossShoot();
 
     /*
