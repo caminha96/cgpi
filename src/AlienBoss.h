@@ -19,6 +19,8 @@ public:
     void draw(float offsetX, float offsetY);
     // Cria e retorna um novo tiro na posição atual do boss
     Shoot shoot();
+    bool isAlive();      // Verifica se o boss ainda está vivo
+    void takeDamage();   // Reduz a vida do boss
     float x, y; // Armazenam a posição atual do AlienBoss (coordenadas X e Y)
 
 };

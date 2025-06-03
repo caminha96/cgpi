@@ -95,12 +95,13 @@ bool Game::colidiu(const Shoot& tiro, const Nave& nave) {
            (tiro.y >= nave.y - alturaNave/2 && tiro.y <= nave.y + alturaNave/2);
 }
 void Game::checarColisoes() {
+    bool bossFoiDestruido = false;  // Nova flag
+
     for (auto& tiro : shoots) {
         if (tiro.direction == -1) {
             if (!naves.empty() && colidiu(tiro, naves[0])) {
                 tiro.active = false;
                 vidas--;
-
                 if (vidas <= 0) {
                     estadoJogo = GAME_OVER;
                 } else {
@@ -115,8 +116,6 @@ void Game::checarColisoes() {
                     tiro.active = false;
                     alien.y = -999;
                     aliensMortos++;
-
-
                     if (nivel == 1 && aliensMortos >= 15) {
                         nivel = 2;
                         aliensMortos = 0;
@@ -126,23 +125,45 @@ void Game::checarColisoes() {
                     break;
                 }
             }
-            if (nivel == 2 && aliens.empty() && alienBoss == nullptr) {
-                alienBoss = new AlienBoss(0.0f, 0.8f);
+// Pelo código completo corrigido:
+        if (alienBoss != nullptr && alienBoss->isAlive()) {
+        float bossWidth = 15 * 0.03f;
+        float bossHeight = 18 * 0.03f;
+    
+            if (tiro.x >= alienBoss->x - bossWidth/2 && 
+            tiro.x <= alienBoss->x + bossWidth/2 &&
+            tiro.y <= alienBoss->y + bossHeight/2 && 
+            tiro.y >= alienBoss->y - bossHeight/2) {
+        
+            tiro.active = false;
+            alienBoss->takeDamage();
+        
+                if (!alienBoss->isAlive()) {
+                delete alienBoss;
+                alienBoss = nullptr;
+                bossFoiDestruido = true;
+                // Adicione aqui qualquer efeito de vitória
+                }
             }
         }
+        }
     }
+
     aliens.erase(
         std::remove_if(aliens.begin(), aliens.end(),
         [](const Alien& a) { return a.y < -900; }),
         aliens.end()
     );
 
-    if (nivel == 2 && aliens.empty() && alienBoss == nullptr) {
+    if (nivel == 2 && aliens.empty() && alienBoss == nullptr && !bossFoiDestruido) {
         alienBoss = new AlienBoss(0.0f, 0.8f);
     }
 }
 void Game::update() {
-    if (estadoJogo == GAME_OVER) return;
+    if (estadoJogo == GAME_OVER || estadoJogo == VITORIA) return;
+    if (nivel == 2 && aliens.empty() && alienBoss == nullptr) {
+    estadoJogo = VITORIA;  // Você precisará adicionar este estado
+    }
     bool changeDirection = false;
     for (auto& alien : aliens) {
         alien.move(direction, 0);
@@ -199,6 +220,21 @@ void Game::draw() {
         const char* msg = "GAME OVER";
         for (const char* c = msg; *c != '\0'; ++c) {
             glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);
+        }
+
+        glColor3f(1.0f, 1.0f, 1.0f);
+        glRasterPos2f(-0.35f, -0.1f);
+        const char* restartMsg = "Para reiniciar pressione espaco";
+        for (const char* c = restartMsg; *c != '\0'; ++c) {
+            glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);
+        }
+    }
+    if (estadoJogo == VITORIA) {
+    glColor3f(0.0f, 1.0f, 0.0f);
+    glRasterPos2f(-0.15f, 0.0f);
+    const char* msg = "VITORIA!";
+        for (const char* c = msg; *c != '\0'; ++c) {
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);
         }
 
         glColor3f(1.0f, 1.0f, 1.0f);

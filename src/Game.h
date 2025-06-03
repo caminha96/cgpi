@@ -11,7 +11,8 @@
  */
 enum GameState {
     PLAYING,    ///< Jogo em andamento normal
-    GAME_OVER   ///< Fim de jogo (derrota)
+    GAME_OVER,
+    VITORIA   ///< Fim de jogo (derrota)
 };
 
 /*

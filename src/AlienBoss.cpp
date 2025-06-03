@@ -1,6 +1,8 @@
 #include "AlienBoss.h"
 #include <GL/glut.h>
 #include "Cores.h"
+#include <iostream>
+
 
 /*
  * Construtor do Alien
@@ -10,7 +12,9 @@
  * Inicializa o alienígena nas coordenadas especificadas,
  * armazenando-as nos atributos x e y da classe.
  */
-AlienBoss::AlienBoss(float startX, float startY) : x(startX), y(startY) {}
+AlienBoss::AlienBoss(float startX, float startY) : x(startX), y(startY) {
+    life = 33; // Vida inicial do boss
+}
 
 /*
  * Move o alienígena
@@ -46,6 +50,18 @@ int alienBoss[18][15] = {
     {0,0,0,2,2,2,2,2,2,2,2,2,0,0,0},
 };
 
+
+void AlienBoss::takeDamage() {
+    if (life > 0) {
+        life--;
+    }
+}
+
+bool AlienBoss::isAlive() {
+    return life > 0;
+}
+
+
 /*
  * Renderiza o alienígena na tela
  * offsetX: Deslocamento horizontal para posicionamento
@@ -60,7 +76,7 @@ int alienBoss[18][15] = {
  */
 void AlienBoss::draw(float offsetX, float offsetY) {
     float size = 0.03f;  // Tamanho de cada "pixel" do sprite
-
+    if (!isAlive()) return;
     for (int i = 0; i < 18; i++) {
         for (int j = 0; j < 15; j++) {
             int cor = alienBoss[i][j];

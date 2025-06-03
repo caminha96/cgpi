@@ -13,10 +13,16 @@ void display() {
 }
 void keyDown(unsigned char key, int x, int y) {
     keyStates[key] = true;
+
+        // Adicione apenas esta verificação extra:
+    if (key == ' ' && (game.estadoJogo == GAME_OVER || game.estadoJogo == VITORIA)) {
+        game.restart();
+    }
 }
 void keyUp(unsigned char key, int x, int y) {
     keyStates[key] = false;
 }
+
 void update(int value) {
     // Movimento para esquerda (teclas A ou a)
     if (keyStates['a'] || keyStates['A']) {
@@ -50,7 +56,7 @@ int main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);  // Double buffering + cores RGB
     glutInitWindowSize(800, 800);                 // Tamanho da janela 800x800
-    glutCreateWindow("NÃO ESQUECE DO MUDAR O NOME PLMDS");  // Cria a janela
+    glutCreateWindow("Independece Day");  // Cria a janela
 
     // Configuração do OpenGL
     glClearColor(0, 0, 0, 1);                    // Cor de fundo preta
