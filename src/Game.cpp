@@ -1,19 +1,66 @@
 #include "Game.h"
 #include <GL/glut.h>
-#include <cstdlib>
-#include <algorithm>
-#include <cmath>
+#include <cstdlib>    // Para rand(), RAND_MAX
+#include <algorithm>  // Para std::remove_if, std::swap
+#include <cmath>      // Para fabs, sin
+#include <string>     // Para std::to_string
 #include "AlienBoss.h"
-#include <string>  
 
 extern Game game;
+float randomFloat(float min, float max) {
+    if (min > max) std::swap(min, max); // Garante min <= max
+    return min + (static_cast<float>(rand()) / static_cast<float>(RAND_MAX)) * (max - min);
+}
 Game::Game() : direction(0.02f), estadoJogo(PLAYING), nivel(1), aliensMortos(0), vidas(3), alienBoss(nullptr) {
     initAliens();
     initNave();
+    initStars();
 }
 Game::~Game() {
     delete alienBoss;
 }
+
+// ADICIONADO: Implementação das funções de estrelas
+void Game::initStars(int numberOfStars) {
+    stars.clear();
+    stars.reserve(numberOfStars); // Opcional: pré-aloca memória
+    for (int i = 0; i < numberOfStars; ++i) {
+        Star star;
+        star.x = randomFloat(-1.0f, 1.0f); // Posição X aleatória na tela
+        star.y = randomFloat(-1.0f, 1.0f); // Posição Y aleatória na tela inicial
+        star.speed = randomFloat(0.0005f, 0.003f); // Velocidade de "queda" ajustada para ~30FPS
+        star.brightness = randomFloat(0.1f, 0.7f); // Brilho variado (mais sutil)
+        stars.push_back(star);
+    }
+}
+
+void Game::updateStars() {
+    for (auto& star : stars) {
+        star.y -= star.speed; // Move a estrela para baixo
+
+        // Se a estrela sair da tela por baixo, reposiciona-a no topo
+        if (star.y < -1.05f) { // Um pouco abaixo de -1.0 para desaparecer completamente
+            star.y = 1.05f;    // Reposiciona um pouco acima de 1.0
+            star.x = randomFloat(-1.0f, 1.0f);
+            // Opcional: re-randomizar velocidade e brilho para mais variedade
+            // star.speed = randomFloat(0.0005f, 0.003f);
+            // star.brightness = randomFloat(0.1f, 0.7f);
+        }
+    }
+}
+
+void Game::drawStars() {
+    // glPointSize(1.0f); // Você pode definir um tamanho para as estrelas aqui se desejar
+    glPointSize(2.5f);
+    glBegin(GL_POINTS);
+    for (const auto& star : stars) {
+        // Define a cor da estrela baseada no seu brilho
+        glColor3f(star.brightness, star.brightness, star.brightness * 0.9f + 0.1f);
+        glVertex2f(star.x, star.y);
+    }
+    glEnd();
+}
+
 void Game::initAliens() {
     aliens.clear();
     const float startX = -0.6f;
@@ -69,6 +116,7 @@ void Game::restart() {
     shoots.clear();
     initAliens();
     initNave();
+    initStars();
     direction = 0.02f;
     nivel = 1;
     aliensMortos = 0;
@@ -167,7 +215,7 @@ void Game::checarColisoes() {
 }
 void Game::update() {
     if (estadoJogo == GAME_OVER || estadoJogo == VITORIA) return;
-
+    updateStars();
     if (nivel == 2 && aliens.empty() && alienBoss == nullptr /*&& !bossFoiDestruido - essa condição estava em checarColisoes*/) {
         // Checar se o boss foi destruído antes de declarar vitória se ele existiu neste nível.
         // Se o boss nunca apareceu (ex: aliens eliminados antes do boss spawnar), então é vitória.
@@ -286,6 +334,7 @@ void Game::draw() {
     static float bossX = 0.0f;
     static float bossSpeed = 0.01f;
     static float bossAngle = 0.0f;
+    drawStars();
     drawBossHealthBar();
     if (estadoJogo == GAME_OVER) {
         glColor3f(1.0f, 0.0f, 0.0f);

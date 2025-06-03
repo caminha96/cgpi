@@ -15,6 +15,12 @@ enum GameState {
     VITORIA   ///< Fim de jogo (derrota)
 };
 
+struct Star {
+    float x, y;       // Posição da estrela
+    float speed;      // Velocidade de movimento da estrela
+    float brightness; // Brilho (afetará a cor)
+};
+
 /*
  * Game
  * Classe principal que gerencia toda a lógica do jogo
@@ -87,4 +93,9 @@ private:
      * Posiciona a nave no centro da parte inferior da tela.
      */
     void respawnNave();
+    // Adicionado: Membros e métodos para o fundo de estrelas
+    std::vector<Star> stars;
+    void initStars(int numberOfStars = 200); // Para inicializar as estrelas
+    void updateStars();                      // Para mover as estrelas
+    void drawStars();                        // Para desenhar as estrelas
 };

@@ -1,5 +1,8 @@
 #include <GL/glut.h>  
 #include "Game.h"
+#include <cstdlib> // Para srand (geralmente já incluído por glut ou outros)
+#include <ctime>   // Para time
+
 bool keyStates[256] = {false};
 
 Game game;  // Instância global do jogo
@@ -57,9 +60,10 @@ int main(int argc, char** argv) {
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);  // Double buffering + cores RGB
     glutInitWindowSize(800, 800);                 // Tamanho da janela 800x800
     glutCreateWindow("Independece Day");  // Cria a janela
-
+    srand(static_cast<unsigned int>(time(nullptr))); // ou time(0)
     // Configuração do OpenGL
-    glClearColor(0, 0, 0, 1);                    // Cor de fundo preta
+    glClearColor(0, 0, 0, 1);
+    glEnable(GL_POINT_SMOOTH);// Cor de fundo preta
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluOrtho2D(-1, 1, -1, 1);                   // Sistema de coordenadas normalizado
